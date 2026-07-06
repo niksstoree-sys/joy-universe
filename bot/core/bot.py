@@ -113,6 +113,7 @@ class JoyUniverse(commands.Bot):
             "bot.cogs.leave",
             "bot.cogs.events",
             "bot.cogs.leveling",
+            "bot.cogs.roles",
         ):
             try:
                 await self.load_extension(extension)
