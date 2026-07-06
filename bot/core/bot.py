@@ -109,6 +109,8 @@ class JoyUniverse(commands.Bot):
         for extension in (
             "bot.cogs.owner",
             "bot.cogs.core_commands",
+            "bot.cogs.welcome",
+            "bot.cogs.leave",
         ):
             try:
                 await self.load_extension(extension)
