@@ -111,6 +111,7 @@ class JoyUniverse(commands.Bot):
             "bot.cogs.core_commands",
             "bot.cogs.welcome",
             "bot.cogs.leave",
+            "bot.cogs.events",
         ):
             try:
                 await self.load_extension(extension)
