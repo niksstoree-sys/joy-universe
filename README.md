@@ -5,9 +5,9 @@ Bot Discord multifungsi (moderasi, leveling, welcome/leave, event) dengan tema k
 ## Status Pengembangan (Roadmap Bertahap)
 
 - [x] **Tahap 1 — Struktur Project, Database, Command Handler** ✅ *(selesai)*
-- [ ] Tahap 2 — Welcome & Leave System
-- [ ] Tahap 3 — Event System
-- [ ] Tahap 4 — Leveling System (rank card, leaderboard image)
+- [x] **Tahap 2 — Welcome & Leave System** ✅ *(selesai)*
+- [x] **Tahap 3 — Event System** ✅ *(selesai)*
+- [x] **Tahap 4 — Leveling System (rank card, leaderboard image)** ✅ *(selesai)*
 - [ ] Tahap 5 — Reaction Role & Auto Role
 - [ ] Tahap 6 — Auto Moderation
 - [ ] Tahap 7 — Moderation & Moderation Log
