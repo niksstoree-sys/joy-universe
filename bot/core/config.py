@@ -24,9 +24,13 @@ def _get_env(key: str, default: str | None = None, required: bool = False) -> st
     return value
 
 
-def _get_int_env(key: str, default: int | None = None) -> int | None:
+def _get_int_env(key: str, default: int | None = None, required: bool = False) -> int | None:
     value = os.getenv(key)
     if value is None or value == "":
+        if required:
+            raise RuntimeError(
+                f"Environment variable `{key}` wajib diisi. Cek file .env atau Railway Variables."
+            )
         return default
     try:
         return int(value)
@@ -58,7 +62,7 @@ class Config:
             token=_get_env("TOKEN", required=True),
             client_id=_get_int_env("CLIENT_ID"),
             guild_id=_get_int_env("GUILD_ID"),
-            owner_id=_get_int_env("OWNER_ID", required=True) or 0,
+            owner_id=_get_int_env("OWNER_ID", required=True),
             database_url=_get_env("DATABASE_URL", "data/joyuniverse.db"),
             default_prefix=_get_env("PREFIX", "!"),
             default_color=int(default_color_hex.lstrip("#"), 16),
