@@ -99,6 +99,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="toggle")
     @_manage_guild_prefix()
     async def welcome_toggle(self, ctx: commands.Context, state: str):
+        """Aktifkan atau nonaktifkan welcome system."""
         state = state.lower()
         if state not in ("on", "off"):
             await ctx.send(embed=JoyEmbed.error("Gunakan `on` atau `off`."))
@@ -109,12 +110,14 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="channel")
     @_manage_guild_prefix()
     async def welcome_channel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Atur channel tujuan pesan welcome."""
         await self.service.set_field(ctx.guild.id, "channel_id", str(channel.id))
         await ctx.send(embed=await self._confirm(f"Channel welcome diset ke {channel.mention}."))
 
     @welcome_group.command(name="content")
     @_manage_guild_prefix()
     async def welcome_content(self, ctx: commands.Context, *, text: str):
+        """Atur teks pesan welcome (di luar embed)."""
         value = None if text.lower() == "none" else text
         await self.service.set_field(ctx.guild.id, "content", value)
         await ctx.send(embed=await self._confirm("Teks pesan welcome diperbarui."))
@@ -122,24 +125,28 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="mention")
     @_manage_guild_prefix()
     async def welcome_mention(self, ctx: commands.Context, state: str):
+        """Atur apakah user di-mention saat welcome."""
         await self.service.set_field(ctx.guild.id, "mention_user", int(state.lower() == "on"))
         await ctx.send(embed=await self._confirm(f"Mention user: **{state.upper()}**."))
 
     @welcome_group.command(name="title")
     @_manage_guild_prefix()
     async def welcome_title(self, ctx: commands.Context, *, text: str):
+        """Atur judul embed welcome."""
         await self.service.set_field(ctx.guild.id, "embed_title", text)
         await ctx.send(embed=await self._confirm("Title embed diperbarui."))
 
     @welcome_group.command(name="description")
     @_manage_guild_prefix()
     async def welcome_description(self, ctx: commands.Context, *, text: str):
+        """Atur deskripsi embed welcome."""
         await self.service.set_field(ctx.guild.id, "embed_description", text)
         await ctx.send(embed=await self._confirm("Description embed diperbarui."))
 
     @welcome_group.command(name="color")
     @_manage_guild_prefix()
     async def welcome_color(self, ctx: commands.Context, hex_color: str):
+        """Atur warna embed welcome (hex)."""
         try:
             int(hex_color.lstrip("#"), 16)
         except ValueError:
@@ -151,6 +158,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="footer")
     @_manage_guild_prefix()
     async def welcome_footer(self, ctx: commands.Context, text: str, icon_url: str | None = None):
+        """Atur footer embed welcome."""
         await self.service.set_field(ctx.guild.id, "embed_footer_text", text)
         if icon_url:
             await self.service.set_field(ctx.guild.id, "embed_footer_icon", icon_url)
@@ -159,6 +167,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="thumbnail")
     @_manage_guild_prefix()
     async def welcome_thumbnail(self, ctx: commands.Context, url: str):
+        """Atur thumbnail embed welcome."""
         value = "{user_avatar}" if url.lower() == "avatar" else url
         await self.service.set_field(ctx.guild.id, "embed_thumbnail", value)
         await ctx.send(embed=await self._confirm("Thumbnail embed diperbarui."))
@@ -166,6 +175,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="image")
     @_manage_guild_prefix()
     async def welcome_image(self, ctx: commands.Context, url: str):
+        """Atur banner/gambar besar embed welcome."""
         value = None if url.lower() == "none" else url
         await self.service.set_field(ctx.guild.id, "embed_image", value)
         await ctx.send(embed=await self._confirm("Banner/image embed diperbarui."))
@@ -173,6 +183,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="author")
     @_manage_guild_prefix()
     async def welcome_author(self, ctx: commands.Context, name: str, icon_url: str | None = None):
+        """Atur author embed welcome."""
         await self.service.set_field(ctx.guild.id, "embed_author_name", name)
         if icon_url:
             await self.service.set_field(ctx.guild.id, "embed_author_icon", icon_url)
@@ -181,18 +192,21 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="timestamp")
     @_manage_guild_prefix()
     async def welcome_timestamp(self, ctx: commands.Context, state: str):
+        """Atur tampilan timestamp di embed welcome."""
         await self.service.set_field(ctx.guild.id, "embed_timestamp", int(state.lower() == "on"))
         await ctx.send(embed=await self._confirm(f"Timestamp embed: **{state.upper()}**."))
 
     @welcome_group.command(name="card")
     @_manage_guild_prefix()
     async def welcome_card(self, ctx: commands.Context, state: str):
+        """Aktifkan atau nonaktifkan welcome card (gambar)."""
         await self.service.set_field(ctx.guild.id, "card_enabled", int(state.lower() == "on"))
         await ctx.send(embed=await self._confirm(f"Welcome card: **{state.upper()}**."))
 
     @welcome_group.command(name="cardbackground")
     @_manage_guild_prefix()
     async def welcome_cardbackground(self, ctx: commands.Context, url: str):
+        """Atur background custom untuk welcome card."""
         value = None if url.lower() == "none" else url
         await self.service.set_field(ctx.guild.id, "card_background", value)
         await ctx.send(embed=await self._confirm("Background card diperbarui."))
@@ -200,6 +214,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="avatarposition")
     @_manage_guild_prefix()
     async def welcome_avatarposition(self, ctx: commands.Context, position: str):
+        """Atur posisi avatar di welcome card."""
         position = position.lower()
         if position not in POSITION_CHOICES:
             await ctx.send(embed=JoyEmbed.error(f"Pilihan: {', '.join(POSITION_CHOICES)}"))
@@ -210,6 +225,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="textposition")
     @_manage_guild_prefix()
     async def welcome_textposition(self, ctx: commands.Context, position: str):
+        """Atur posisi teks di welcome card."""
         position = position.lower()
         if position not in TEXT_POSITION_CHOICES:
             await ctx.send(embed=JoyEmbed.error(f"Pilihan: {', '.join(TEXT_POSITION_CHOICES)}"))
@@ -220,6 +236,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="button")
     @_manage_guild_prefix()
     async def welcome_button(self, ctx: commands.Context, label: str, url: str):
+        """Tambahkan button link di pesan welcome."""
         await self.service.set_field(ctx.guild.id, "button_label", label)
         await self.service.set_field(ctx.guild.id, "button_url", url)
         await ctx.send(embed=await self._confirm(f"Button `{label}` ditambahkan ke welcome message."))
@@ -227,6 +244,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="removebutton")
     @_manage_guild_prefix()
     async def welcome_removebutton(self, ctx: commands.Context):
+        """Hapus button dari pesan welcome."""
         await self.service.set_field(ctx.guild.id, "button_label", None)
         await self.service.set_field(ctx.guild.id, "button_url", None)
         await ctx.send(embed=await self._confirm("Button welcome dihapus."))
@@ -234,6 +252,7 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="test")
     @_manage_guild_prefix()
     async def welcome_test(self, ctx: commands.Context):
+        """Kirim contoh pesan welcome untuk preview."""
         greeting = await self.service.get(ctx.guild.id)
         message = await send_greeting_message(ctx.channel, greeting, ctx.author, ctx.guild, kind="welcome")
         if message is None:
@@ -242,11 +261,13 @@ class Welcome(commands.GroupCog, name="welcome"):
     @welcome_group.command(name="reset")
     @_manage_guild_prefix()
     async def welcome_reset(self, ctx: commands.Context):
+        """Reset semua pengaturan welcome ke default."""
         await self.service.reset(ctx.guild.id)
         await ctx.send(embed=await self._confirm("Konfigurasi welcome dikembalikan ke default."))
 
     @welcome_group.command(name="variables")
     async def welcome_variables(self, ctx: commands.Context):
+        """Menampilkan daftar custom variable yang bisa dipakai."""
         await ctx.send(embed=JoyEmbed.info(VARIABLES_HELP, title=f"{emoji.info} Custom Variables"))
 
     # ================= SLASH COMMAND (auto grouped: /welcome ...) =================
