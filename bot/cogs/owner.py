@@ -174,11 +174,13 @@ class Owner(commands.Cog):
     @commands.group(name="noprefix", invoke_without_command=True)
     @is_bot_admin()
     async def noprefix(self, ctx: commands.Context):
+        """Menampilkan cara pakai command noprefix add/remove."""
         await ctx.send(embed=JoyEmbed.info("Gunakan `!noprefix add @user` atau `!noprefix remove @user`."))
 
     @noprefix.command(name="add")
     @is_bot_admin()
     async def noprefix_add(self, ctx: commands.Context, user: discord.User):
+        """Izinkan user memakai command tanpa prefix."""
         await self.bot.db.execute(
             "INSERT OR IGNORE INTO no_prefix_users (user_id, added_by) VALUES (?, ?)",
             (str(user.id), str(ctx.author.id)),
@@ -189,6 +191,7 @@ class Owner(commands.Cog):
     @noprefix.command(name="remove")
     @is_bot_admin()
     async def noprefix_remove(self, ctx: commands.Context, user: discord.User):
+        """Cabut akses no-prefix dari user."""
         await self.bot.db.execute("DELETE FROM no_prefix_users WHERE user_id = ?", (str(user.id),))
         await self.bot.refresh_no_prefix_cache()
         await ctx.send(embed=JoyEmbed.success(f"Akses no-prefix {user.mention} dicabut."))
@@ -198,6 +201,7 @@ class Owner(commands.Cog):
     @commands.command(name="addadmin")
     @commands.is_owner()
     async def add_admin(self, ctx: commands.Context, user: discord.User):
+        """Jadikan user sebagai Bot Admin."""
         await self.bot.db.execute(
             "INSERT OR IGNORE INTO bot_admins (user_id, added_by) VALUES (?, ?)",
             (str(user.id), str(ctx.author.id)),
@@ -208,6 +212,7 @@ class Owner(commands.Cog):
     @commands.command(name="removeadmin")
     @commands.is_owner()
     async def remove_admin(self, ctx: commands.Context, user: discord.User):
+        """Cabut status Bot Admin dari user."""
         await self.bot.db.execute("DELETE FROM bot_admins WHERE user_id = ?", (str(user.id),))
         await self.bot.refresh_bot_admin_cache()
         await ctx.send(embed=JoyEmbed.success(f"{user.mention} tidak lagi menjadi Bot Admin."))
