@@ -8,10 +8,37 @@ Bot Discord multifungsi (moderasi, leveling, welcome/leave, event) dengan tema k
 - [x] **Tahap 2 — Welcome & Leave System** ✅ *(selesai)*
 - [x] **Tahap 3 — Event System** ✅ *(selesai)*
 - [x] **Tahap 4 — Leveling System (rank card, leaderboard image)** ✅ *(selesai)*
-- [ ] Tahap 5 — Reaction Role & Auto Role
-- [ ] Tahap 6 — Auto Moderation
-- [ ] Tahap 7 — Moderation & Moderation Log
-- [ ] Tahap 8 — Slash command lengkap semua fitur + polish akhir
+- [x] **Tahap 5 — Reaction Role & Auto Role** ✅ *(selesai)*
+- [x] **Tahap 6 — Auto Moderation** ✅ *(selesai)*
+- [x] **Tahap 7 — Moderation & Moderation Log** ✅ *(selesai)*
+- [x] **Tahap 8 — Polish akhir** ✅ *(selesai)*
+
+## Tahap 8 — Apa yang Diperbaiki
+
+1. **Bug lama: error handler gak pernah ke-wire.** `bot/utils/error_handler.py` dibuat di Tahap 1 tapi baru sekarang benar-benar disambungkan ke `on_command_error` (prefix) dan `tree.on_error` (slash). Sebelumnya semua error cuma nge-print ke console tanpa pesan yang jelas ke user.
+2. **Bug lama: Maintenance Mode gak benar-benar memblokir apa-apa.** `!maintenance on` cuma nyimpen status di DB tapi gak ada yang baca. Sekarang ada global check (`_global_maintenance_check` untuk prefix, `MaintenanceAwareTree.interaction_check` untuk slash) yang benar-benar memblokir command dari non-admin selama maintenance aktif.
+3. **Slash command "dobel".** Ini terjadi kalau command pernah di-sync ke **global** dan ke **guild** secara bersamaan — Discord menampilkan keduanya sampai salah satu dibersihkan. `!sync` sekarang punya 4 opsi jelas:
+   - `!sync global` — cara utama, berlaku di semua server (bisa telat sampai ~1 jam)
+   - `!sync guild` — instan tapi cuma untuk server ini, cocok buat testing
+   - `!sync cleanguild` — bersihkan command khusus guild ini (hilangkan dobel)
+   - `!sync cleanglobal` — hapus semua command global (reset total)
+
+   **Kalau slash command kamu sekarang dobel:** jalankan `!sync cleanguild` di server yang kena, lalu `!sync global` sekali lagi.
+
+## Daftar Command Lengkap
+
+| Kategori | Prefix | Slash |
+|---|---|---|
+| Core | `!help`, `!ping`, `!info` | `/help`, `/ping`, `/info` |
+| Owner | `!maintenance`, `!reload`, `!sync`, `!shutdown`, `!noprefix`, `!addadmin`/`!removeadmin` | - (owner-only, sengaja gak di-slash) |
+| Welcome | `!welcome ...` | `/welcome ...` |
+| Leave | `!leave ...` | `/leave ...` |
+| Event | `!event ...` | `/event ...` |
+| Leveling | `!rank`, `!leaderboard`, `!prestige`, `!level ...` | `/rank`, `/leaderboard`, `/prestige`, `/level ...` |
+| Auto Role | `!autorole ...` | `/autorole ...` |
+| Reaction Role | `!reactionrole ...` (alias `!rr`) | `/reactionrole ...` |
+| Auto Moderation | `!automod ...` | `/automod ...` |
+| Moderation | `!ban`, `!softban`, `!kick`, `!unban`, `!mute`, `!unmute`, `!timeout`, `!untimeout`, `!warn`, `!warnings`, `!removewarn`, `!clearwarnings`, `!history`, `!slowmode`, `!lock`, `!unlock`, `!purge`, `!nickname`, `!role add/remove`, `!voicemute`, `!voiceunmute`, `!voicekick`, `!voicemove`, `!setmodlog`, `!setmuterole`, `!logconfig` | Padanan `/ban`, `/kick`, dst (kecuali `!logconfig`, `!role add/remove` jadi `/roleadd` `/roleremove`) |
 
 ## Struktur Project
 
