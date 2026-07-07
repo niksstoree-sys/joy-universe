@@ -77,5 +77,16 @@ class GuildConfigService:
         )
         self._cache.pop(guild_id, None)
 
+    async def set_mute_role_id(self, guild_id: int, role_id: int | None) -> None:
+        await self.db.execute(
+            """
+            INSERT INTO guild_configs (guild_id, mute_role_id) VALUES (?, ?)
+            ON CONFLICT(guild_id) DO UPDATE SET mute_role_id = excluded.mute_role_id,
+                                                 updated_at = datetime('now')
+            """,
+            (str(guild_id), str(role_id) if role_id else None),
+        )
+        self._cache.pop(guild_id, None)
+
     def invalidate(self, guild_id: int) -> None:
         self._cache.pop(guild_id, None)
