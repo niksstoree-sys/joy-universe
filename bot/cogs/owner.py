@@ -106,18 +106,57 @@ class Owner(commands.Cog):
 
     @commands.command(name="sync")
     @is_bot_admin()
-    async def sync(self, ctx: commands.Context, scope: str = "guild"):
-        """Sync slash command. `!sync guild` (cepat, khusus server ini) atau `!sync global`."""
+    async def sync(self, ctx: commands.Context, scope: str = "global"):
+        """
+        Kelola slash command sync.
+
+        PENTING soal slash command "dobel": itu terjadi kalau command pernah
+        di-sync ke GLOBAL dan ke GUILD ini secara bersamaan — Discord akan
+        menampilkan keduanya sampai salah satunya dibersihkan. Aturan aman:
+        - Pakai `!sync global` sebagai cara utama (berlaku di semua server,
+          tapi butuh waktu hingga ~1 jam untuk muncul).
+        - Pakai `!sync guild` HANYA untuk testing cepat di server ini (instan,
+          tapi kalau lupa dibersihkan akan bikin dobel dengan versi global).
+        - Kalau sudah terlanjur dobel, jalankan `!sync cleanguild` di server
+          yang kena, baru `!sync global` sekali lagi.
+
+        Opsi: `global` | `guild` | `cleanguild` | `cleanglobal`
+        """
         async with ctx.typing():
             if scope == "global":
                 synced = await self.bot.tree.sync()
-                await ctx.send(embed=JoyEmbed.success(f"{len(synced)} slash command di-sync secara global."))
-            else:
+                await ctx.send(embed=JoyEmbed.success(
+                    f"{len(synced)} slash command di-sync secara global. "
+                    f"Bisa butuh waktu hingga ~1 jam untuk muncul di semua server."
+                ))
+            elif scope == "guild":
                 if ctx.guild is None:
                     await ctx.send(embed=JoyEmbed.error("Command ini harus dipakai di dalam server untuk sync guild."))
                     return
                 self.bot.tree.copy_global_to(guild=ctx.guild)
                 synced = await self.bot.tree.sync(guild=ctx.guild)
+                await ctx.send(embed=JoyEmbed.success(
+                    f"{len(synced)} slash command di-sync instan untuk server ini. "
+                    f"Ingat: ini bikin salinan khusus guild — jalankan `!sync cleanguild` di sini "
+                    f"kalau nanti sudah tidak perlu testing lagi, supaya tidak dobel dengan versi global."
+                ))
+            elif scope == "cleanguild":
+                if ctx.guild is None:
+                    await ctx.send(embed=JoyEmbed.error("Command ini harus dipakai di dalam server."))
+                    return
+                self.bot.tree.clear_commands(guild=ctx.guild)
+                await self.bot.tree.sync(guild=ctx.guild)
+                await ctx.send(embed=JoyEmbed.success(
+                    "Slash command khusus guild ini dibersihkan. Server ini sekarang cuma pakai versi global."
+                ))
+            elif scope == "cleanglobal":
+                self.bot.tree.clear_commands(guild=None)
+                await self.bot.tree.sync()
+                await ctx.send(embed=JoyEmbed.success(
+                    "Semua slash command global dihapus. Jalankan `!sync global` lagi untuk daftarkan ulang."
+                ))
+            else:
+                await ctx.send(embed=JoyEmbed.error("Opsi: `global`, `guild`, `cleanguild`, atau `cleanglobal`."))
                 await ctx.send(embed=JoyEmbed.success(f"{len(synced)} slash command di-sync untuk server ini."))
 
     # ---------- Emergency Shutdown ----------
