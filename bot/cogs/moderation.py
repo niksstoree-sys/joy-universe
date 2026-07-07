@@ -85,6 +85,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(ban_members=True)
     @commands.guild_only()
     async def ban_prefix(self, ctx: commands.Context, member: discord.Member, *, reason: str = "Tidak ada alasan"):
+        """Ban member dari server."""
         await self._do_ban(ctx.guild, member, ctx.author, reason)
         await ctx.send(embed=await self._confirm(f"{member.mention} telah di-ban. Alasan: {reason}"))
 
@@ -106,6 +107,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(ban_members=True)
     @commands.guild_only()
     async def softban_prefix(self, ctx: commands.Context, member: discord.Member, *, reason: str = "Tidak ada alasan"):
+        """Softban member (hapus pesan lalu langsung unban)."""
         await self._do_softban(ctx.guild, member, ctx.author, reason)
         await ctx.send(embed=await self._confirm(f"{member.mention} di-softban (pesan dibersihkan, langsung bisa join lagi)."))
 
@@ -128,6 +130,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(kick_members=True)
     @commands.guild_only()
     async def kick_prefix(self, ctx: commands.Context, member: discord.Member, *, reason: str = "Tidak ada alasan"):
+        """Kick member dari server."""
         await self._do_kick(ctx.guild, member, ctx.author, reason)
         await ctx.send(embed=await self._confirm(f"{member.mention} telah di-kick. Alasan: {reason}"))
 
@@ -149,6 +152,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(ban_members=True)
     @commands.guild_only()
     async def unban_prefix(self, ctx: commands.Context, user_id: int, *, reason: str = "Tidak ada alasan"):
+        """Unban user berdasarkan User ID."""
         await self._do_unban(ctx.guild, user_id, ctx.author, reason, ctx)
 
     @app_commands.command(name="unban", description="Unban user berdasarkan User ID.")
@@ -186,6 +190,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(moderate_members=True)
     @commands.guild_only()
     async def mute_prefix(self, ctx: commands.Context, member: discord.Member, *, reason: str = "Tidak ada alasan"):
+        """Mute member (role-based, permanen sampai di-unmute)."""
         role = await self._get_or_create_mute_role(ctx.guild)
         await member.add_roles(role, reason=reason)
         await self.mod_service.add_history(ctx.guild.id, member.id, ctx.author.id, "mute", reason)
@@ -211,6 +216,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(moderate_members=True)
     @commands.guild_only()
     async def unmute_prefix(self, ctx: commands.Context, member: discord.Member):
+        """Unmute member."""
         config = await self.guild_config_service.get(ctx.guild.id)
         if config.mute_role_id:
             role = ctx.guild.get_role(int(config.mute_role_id))
@@ -236,6 +242,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(moderate_members=True)
     @commands.guild_only()
     async def timeout_prefix(self, ctx: commands.Context, member: discord.Member, duration: str, *, reason: str = "Tidak ada alasan"):
+        """Timeout member. Contoh durasi: 10m, 1h, 2d."""
         try:
             seconds = parse_duration(duration)
         except ValueError as e:
@@ -267,6 +274,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(moderate_members=True)
     @commands.guild_only()
     async def untimeout_prefix(self, ctx: commands.Context, member: discord.Member):
+        """Cabut timeout dari member."""
         await member.timeout(None, reason="Untimeout")
         await self.mod_service.add_history(ctx.guild.id, member.id, ctx.author.id, "untimeout")
         await ctx.send(embed=await self._confirm(f"Timeout {member.mention} telah dicabut."))
@@ -284,6 +292,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(moderate_members=True)
     @commands.guild_only()
     async def warn_prefix(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+        """Beri warning ke member."""
         warning_id = await self.mod_service.add_warning(ctx.guild.id, member.id, ctx.author.id, reason)
         await self.mod_service.add_history(ctx.guild.id, member.id, ctx.author.id, "warn", reason)
         await self._send_log(ctx.guild, "log_moderation_action", JoyEmbed.warning(
@@ -306,6 +315,7 @@ class Moderation(commands.Cog):
     @commands.command(name="warnings")
     @commands.guild_only()
     async def warnings_prefix(self, ctx: commands.Context, member: discord.Member):
+        """Menampilkan daftar warning member."""
         await self._send_warnings(ctx, member)
 
     @app_commands.command(name="warnings", description="Menampilkan daftar warning member.")
@@ -326,6 +336,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(moderate_members=True)
     @commands.guild_only()
     async def removewarn_prefix(self, ctx: commands.Context, warning_id: int):
+        """Hapus satu warning berdasarkan ID."""
         ok = await self.mod_service.remove_warning(warning_id, ctx.guild.id)
         await ctx.send(embed=await self._confirm(f"Warning `#{warning_id}` dihapus.") if ok else JoyEmbed.error("Warning tidak ditemukan."))
 
@@ -339,6 +350,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(moderate_members=True)
     @commands.guild_only()
     async def clearwarnings_prefix(self, ctx: commands.Context, member: discord.Member):
+        """Hapus semua warning member."""
         count = await self.mod_service.clear_warnings(ctx.guild.id, member.id)
         await ctx.send(embed=await self._confirm(f"{count} warning {member.mention} telah dihapus."))
 
@@ -354,6 +366,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(moderate_members=True)
     @commands.guild_only()
     async def history_prefix(self, ctx: commands.Context, member: discord.Member):
+        """Menampilkan riwayat moderasi member."""
         await self._send_history(ctx, member)
 
     @app_commands.command(name="history", description="Menampilkan riwayat moderasi member.")
@@ -384,6 +397,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_channels=True)
     @commands.guild_only()
     async def slowmode_prefix(self, ctx: commands.Context, seconds: int, channel: discord.TextChannel | None = None):
+        """Atur slowmode channel."""
         target = channel or ctx.channel
         await target.edit(slowmode_delay=seconds)
         await ctx.send(embed=await self._confirm(f"Slowmode {target.mention} diset ke **{seconds} detik**."))
@@ -399,6 +413,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_channels=True)
     @commands.guild_only()
     async def lock_prefix(self, ctx: commands.Context, channel: discord.TextChannel | None = None, *, reason: str = "Tidak ada alasan"):
+        """Kunci channel supaya member tidak bisa kirim pesan."""
         target = channel or ctx.channel
         await target.set_permissions(ctx.guild.default_role, send_messages=False, reason=reason)
         await ctx.send(embed=await self._confirm(f"{target.mention} telah dikunci."))
@@ -414,6 +429,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_channels=True)
     @commands.guild_only()
     async def unlock_prefix(self, ctx: commands.Context, channel: discord.TextChannel | None = None):
+        """Buka kunci channel."""
         target = channel or ctx.channel
         await target.set_permissions(ctx.guild.default_role, send_messages=None, reason="Unlock")
         await ctx.send(embed=await self._confirm(f"{target.mention} telah dibuka kembali."))
@@ -429,6 +445,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     @commands.guild_only()
     async def purge_prefix(self, ctx: commands.Context, amount: int, member: discord.Member | None = None):
+        """Hapus banyak pesan sekaligus."""
         await ctx.message.delete()
         def check(m: discord.Message) -> bool:
             return member is None or m.author.id == member.id
@@ -451,6 +468,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_nicknames=True)
     @commands.guild_only()
     async def nickname_prefix(self, ctx: commands.Context, member: discord.Member, *, new_nick: str = ""):
+        """Ubah nickname member."""
         await member.edit(nick=new_nick or None, reason=f"Diubah oleh {ctx.author}")
         await ctx.send(embed=await self._confirm(f"Nickname {member.mention} diubah ke **{new_nick or member.name}**."))
 
@@ -465,17 +483,20 @@ class Moderation(commands.Cog):
     @commands.group(name="role", invoke_without_command=True)
     @commands.guild_only()
     async def role_group(self, ctx: commands.Context):
+        """Kelola role member (tambah/hapus)."""
         await ctx.send(embed=JoyEmbed.info("Gunakan `!role add @member @role` atau `!role remove @member @role`."))
 
     @role_group.command(name="add")
     @commands.has_permissions(manage_roles=True)
     async def role_add(self, ctx: commands.Context, member: discord.Member, role: discord.Role):
+        """Tambahkan role ke member."""
         await member.add_roles(role, reason=f"Ditambahkan oleh {ctx.author}")
         await ctx.send(embed=await self._confirm(f"Role {role.mention} ditambahkan ke {member.mention}."))
 
     @role_group.command(name="remove")
     @commands.has_permissions(manage_roles=True)
     async def role_remove(self, ctx: commands.Context, member: discord.Member, role: discord.Role):
+        """Hapus role dari member."""
         await member.remove_roles(role, reason=f"Dihapus oleh {ctx.author}")
         await ctx.send(embed=await self._confirm(f"Role {role.mention} dihapus dari {member.mention}."))
 
@@ -497,6 +518,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(mute_members=True)
     @commands.guild_only()
     async def voicemute_prefix(self, ctx: commands.Context, member: discord.Member):
+        """Voice mute member (server mute)."""
         await member.edit(mute=True, reason=f"Voice mute oleh {ctx.author}")
         await ctx.send(embed=await self._confirm(f"{member.mention} di-voice mute."))
 
@@ -504,6 +526,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(mute_members=True)
     @commands.guild_only()
     async def voiceunmute_prefix(self, ctx: commands.Context, member: discord.Member):
+        """Voice unmute member."""
         await member.edit(mute=False, reason=f"Voice unmute oleh {ctx.author}")
         await ctx.send(embed=await self._confirm(f"{member.mention} di-voice unmute."))
 
@@ -511,6 +534,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(move_members=True)
     @commands.guild_only()
     async def voicekick_prefix(self, ctx: commands.Context, member: discord.Member):
+        """Keluarkan member dari voice channel."""
         await member.move_to(None, reason=f"Voice kick oleh {ctx.author}")
         await ctx.send(embed=await self._confirm(f"{member.mention} dikeluarkan dari voice channel."))
 
@@ -518,6 +542,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(move_members=True)
     @commands.guild_only()
     async def voicemove_prefix(self, ctx: commands.Context, member: discord.Member, channel: discord.VoiceChannel):
+        """Pindahkan member ke voice channel lain."""
         await member.move_to(channel, reason=f"Voice move oleh {ctx.author}")
         await ctx.send(embed=await self._confirm(f"{member.mention} dipindahkan ke {channel.mention}."))
 
@@ -551,6 +576,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_guild=True)
     @commands.guild_only()
     async def setmodlog_prefix(self, ctx: commands.Context, channel: discord.TextChannel | None = None):
+        """Atur channel untuk moderation log."""
         await self.guild_config_service.set_mod_log_channel(ctx.guild.id, channel.id if channel else None)
         await ctx.send(embed=await self._confirm(f"Moderation log channel: {channel.mention if channel else 'dinonaktifkan'}."))
 
@@ -564,6 +590,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_guild=True)
     @commands.guild_only()
     async def setmuterole_prefix(self, ctx: commands.Context, role: discord.Role):
+        """Atur role yang dipakai untuk command mute."""
         await self.guild_config_service.set_mute_role_id(ctx.guild.id, role.id)
         await ctx.send(embed=await self._confirm(f"Mute role diset ke {role.mention}."))
 
@@ -577,6 +604,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_guild=True)
     @commands.guild_only()
     async def logconfig_prefix(self, ctx: commands.Context, category: str, state: str):
+        """Aktifkan/nonaktifkan kategori moderation log tertentu."""
         column = f"log_{category.lower()}"
         try:
             await self.mod_service.set_log_config_field(ctx.guild.id, column, state.lower() == "on")
