@@ -13,13 +13,34 @@ from __future__ import annotations
 import logging
 
 import discord
+from discord import app_commands
 from discord.ext import commands
 
 from bot.core.config import config
 from bot.database.connection import Database
 from bot.services.guild_config_service import GuildConfigService
+from bot.utils.embeds import JoyEmbed
+from bot.utils.emojis import emoji
+from bot.utils.error_handler import handle_app_command_error, handle_command_error
 
 logger = logging.getLogger("joyuniverse.bot")
+
+
+class MaintenanceAwareTree(app_commands.CommandTree):
+    """CommandTree custom supaya maintenance mode juga memblokir slash command."""
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        bot: "JoyUniverse" = interaction.client  # type: ignore
+        if bot.maintenance_mode and not bot.is_bot_admin(interaction.user.id):
+            await interaction.response.send_message(
+                embed=JoyEmbed.warning(
+                    bot.maintenance_reason or "Bot sedang dalam perbaikan, mohon tunggu sebentar.",
+                    title=f"{emoji.maintenance} Maintenance Mode Aktif",
+                ),
+                ephemeral=True,
+            )
+            return False
+        return True
 
 
 class JoyUniverse(commands.Bot):
@@ -34,6 +55,7 @@ class JoyUniverse(commands.Bot):
             intents=intents,
             help_command=None,  # help command custom, dibuat di cogs/core_commands.py
             case_insensitive=True,
+            tree_cls=MaintenanceAwareTree,
         )
 
         self.config = config
@@ -94,6 +116,15 @@ class JoyUniverse(commands.Bot):
             self.maintenance_mode = bool(row["is_active"])
             self.maintenance_reason = row["reason"]
 
+    async def _global_maintenance_check(self, ctx: commands.Context) -> bool:
+        if self.maintenance_mode and not self.is_bot_admin(ctx.author.id):
+            await ctx.send(embed=JoyEmbed.warning(
+                self.maintenance_reason or "Bot sedang dalam perbaikan, mohon tunggu sebentar.",
+                title=f"{emoji.maintenance} Maintenance Mode Aktif",
+            ))
+            return False
+        return True
+
     # ---------- Lifecycle ----------
 
     async def setup_hook(self) -> None:
@@ -105,6 +136,9 @@ class JoyUniverse(commands.Bot):
         await self.refresh_no_prefix_cache()
         await self.refresh_bot_admin_cache()
         await self.refresh_maintenance_state()
+
+        self.add_check(self._global_maintenance_check)
+        self.tree.on_error = self._on_app_command_error
 
         for extension in (
             "bot.cogs.owner",
@@ -134,6 +168,12 @@ class JoyUniverse(commands.Bot):
                 name=f"{self.config.default_prefix}help | JOY UNIVERSE",
             )
         )
+
+    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
+        await handle_command_error(ctx, error)
+
+    async def _on_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError) -> None:
+        await handle_app_command_error(interaction, error)
 
     async def close(self) -> None:
         await self.db.close()
