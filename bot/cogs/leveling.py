@@ -181,17 +181,20 @@ class Leveling(commands.Cog):
     @commands.command(name="rank", aliases=["lvl"])
     @commands.guild_only()
     async def rank_prefix(self, ctx: commands.Context, member: discord.Member | None = None):
+        """Menampilkan rank card kamu atau member lain."""
         target = member or ctx.author
         await self._send_rank(ctx, target)
 
     @commands.command(name="leaderboard", aliases=["lb", "top"])
     @commands.guild_only()
     async def leaderboard_prefix(self, ctx: commands.Context, page: int = 1):
+        """Menampilkan leaderboard XP server (dalam bentuk gambar)."""
         await self._send_leaderboard(ctx, page)
 
     @commands.command(name="prestige")
     @commands.guild_only()
     async def prestige_prefix(self, ctx: commands.Context):
+        """Prestige kalau level kamu sudah cukup tinggi."""
         await self._do_prestige(ctx, ctx.author)
 
     # ================= PREFIX: !level (config, admin) =================
@@ -199,6 +202,7 @@ class Leveling(commands.Cog):
     @commands.group(name="level", invoke_without_command=True)
     @commands.guild_only()
     async def level_config_group(self, ctx: commands.Context):
+        """Menampilkan konfigurasi leveling saat ini."""
         config = await self.service.get_config(ctx.guild.id)
         embed = JoyEmbed.info(
             f"**Status:** {'Aktif' if config.enabled else 'Nonaktif'}\n"
@@ -215,12 +219,14 @@ class Leveling(commands.Cog):
     @level_config_group.command(name="toggle")
     @_manage_guild_prefix()
     async def level_toggle(self, ctx: commands.Context, state: str):
+        """Aktifkan atau nonaktifkan leveling system."""
         await self.service.set_config_field(ctx.guild.id, "enabled", int(state.lower() == "on"))
         await ctx.send(embed=JoyEmbed.success(f"Leveling system: **{state.upper()}**."))
 
     @level_config_group.command(name="setxp")
     @_manage_guild_prefix()
     async def level_setxp(self, ctx: commands.Context, min_xp: int, max_xp: int):
+        """Atur rentang XP per pesan."""
         if min_xp > max_xp or min_xp < 1:
             await ctx.send(embed=JoyEmbed.error("min_xp harus >= 1 dan <= max_xp."))
             return
@@ -231,18 +237,21 @@ class Leveling(commands.Cog):
     @level_config_group.command(name="cooldown")
     @_manage_guild_prefix()
     async def level_cooldown(self, ctx: commands.Context, seconds: int):
+        """Atur cooldown anti-spam XP (detik)."""
         await self.service.set_config_field(ctx.guild.id, "xp_cooldown_seconds", seconds)
         await ctx.send(embed=JoyEmbed.success(f"Cooldown XP diset ke **{seconds} detik**."))
 
     @level_config_group.command(name="dailylimit")
     @_manage_guild_prefix()
     async def level_dailylimit(self, ctx: commands.Context, limit: int):
+        """Atur batas XP harian (0 = tidak dibatasi)."""
         await self.service.set_config_field(ctx.guild.id, "daily_xp_limit", max(0, limit))
         await ctx.send(embed=JoyEmbed.success(f"Daily XP limit diset ke **{limit if limit > 0 else 'Tidak dibatasi'}**."))
 
     @level_config_group.command(name="voicexp")
     @_manage_guild_prefix()
     async def level_voicexp(self, ctx: commands.Context, state: str, xp_per_minute: int | None = None):
+        """Aktifkan/nonaktifkan dan atur Voice XP."""
         await self.service.set_config_field(ctx.guild.id, "voice_xp_enabled", int(state.lower() == "on"))
         if xp_per_minute is not None:
             await self.service.set_config_field(ctx.guild.id, "voice_xp_per_minute", xp_per_minute)
@@ -251,30 +260,35 @@ class Leveling(commands.Cog):
     @level_config_group.command(name="levelupmessage")
     @_manage_guild_prefix()
     async def level_levelupmessage(self, ctx: commands.Context, *, text: str):
+        """Atur teks pesan saat member naik level."""
         await self.service.set_config_field(ctx.guild.id, "level_up_message", text)
         await ctx.send(embed=JoyEmbed.success("Pesan level up diperbarui."))
 
     @level_config_group.command(name="levelupchannel")
     @_manage_guild_prefix()
     async def level_levelupchannel(self, ctx: commands.Context, channel: discord.TextChannel | None = None):
+        """Atur channel khusus untuk pesan level up."""
         await self.service.set_config_field(ctx.guild.id, "level_up_channel_id", str(channel.id) if channel else None)
         await ctx.send(embed=JoyEmbed.success(f"Channel level up: {channel.mention if channel else 'sama seperti channel chat'}."))
 
     @level_config_group.command(name="levelupcard")
     @_manage_guild_prefix()
     async def level_levelupcard(self, ctx: commands.Context, state: str):
+        """Atur apakah level up pakai rank card (gambar) atau embed teks saja."""
         await self.service.set_config_field(ctx.guild.id, "level_up_use_card", int(state.lower() == "on"))
         await ctx.send(embed=JoyEmbed.success(f"Level up pakai rank card: **{state.upper()}**."))
 
     @level_config_group.command(name="prestigerequired")
     @_manage_guild_prefix()
     async def level_prestigerequired(self, ctx: commands.Context, level: int):
+        """Atur level minimal untuk bisa prestige."""
         await self.service.set_config_field(ctx.guild.id, "prestige_required_level", level)
         await ctx.send(embed=JoyEmbed.success(f"Level minimal prestige diset ke **{level}**."))
 
     @level_config_group.command(name="rankbackground")
     @_manage_guild_prefix()
     async def level_rankbackground(self, ctx: commands.Context, url: str):
+        """Atur background custom untuk rank card."""
         value = None if url.lower() == "none" else url
         await self.service.set_config_field(ctx.guild.id, "rank_card_background", value)
         await ctx.send(embed=JoyEmbed.success("Background rank card diperbarui."))
@@ -282,6 +296,7 @@ class Leveling(commands.Cog):
     @level_config_group.command(name="leaderboardbackground")
     @_manage_guild_prefix()
     async def level_leaderboardbackground(self, ctx: commands.Context, url: str):
+        """Atur background custom untuk leaderboard card."""
         value = None if url.lower() == "none" else url
         await self.service.set_config_field(ctx.guild.id, "leaderboard_background", value)
         await ctx.send(embed=JoyEmbed.success("Background leaderboard card diperbarui."))
@@ -289,24 +304,28 @@ class Leveling(commands.Cog):
     @level_config_group.command(name="rolereward")
     @_manage_guild_prefix()
     async def level_rolereward(self, ctx: commands.Context, level: int, role: discord.Role):
+        """Atur role reward untuk level tertentu."""
         await self.service.set_level_role_reward(ctx.guild.id, level, role.id)
         await ctx.send(embed=JoyEmbed.success(f"Role {role.mention} akan diberikan saat mencapai **Level {level}**."))
 
     @level_config_group.command(name="removerolereward")
     @_manage_guild_prefix()
     async def level_removerolereward(self, ctx: commands.Context, level: int):
+        """Hapus role reward dari level tertentu."""
         await self.service.remove_level_role_reward(ctx.guild.id, level)
         await ctx.send(embed=JoyEmbed.success(f"Role reward untuk Level {level} dihapus."))
 
     @level_config_group.command(name="prestigerolereward")
     @_manage_guild_prefix()
     async def level_prestigerolereward(self, ctx: commands.Context, prestige: int, role: discord.Role):
+        """Atur role reward untuk prestige tertentu."""
         await self.service.set_prestige_role_reward(ctx.guild.id, prestige, role.id)
         await ctx.send(embed=JoyEmbed.success(f"Role {role.mention} akan diberikan saat mencapai **Prestige {prestige}**."))
 
     @level_config_group.command(name="resetuser")
     @_manage_guild_prefix()
     async def level_resetuser(self, ctx: commands.Context, member: discord.Member):
+        """Reset data level seorang member."""
         await self.service.reset_user(ctx.guild.id, member.id)
         await ctx.send(embed=JoyEmbed.success(f"Data level {member.mention} sudah direset."))
 
