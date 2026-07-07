@@ -172,12 +172,14 @@ class Event(commands.GroupCog, name="event"):
     @event_group.command(name="description")
     @_manage_guild_prefix()
     async def event_description(self, ctx: commands.Context, event_id: int, *, text: str):
+        """Atur deskripsi event."""
         ok = await self.service.set_field(event_id, ctx.guild.id, "description", text)
         await ctx.send(embed=await self._confirm("Deskripsi event diperbarui.") if ok else JoyEmbed.error("Event tidak ditemukan."))
 
     @event_group.command(name="repeat")
     @_manage_guild_prefix()
     async def event_repeat(self, ctx: commands.Context, event_id: int, repeat_type: str):
+        """Atur pengulangan event (sekali/harian/mingguan/bulanan)."""
         repeat_type = repeat_type.lower()
         if repeat_type not in REPEAT_CHOICES:
             await ctx.send(embed=JoyEmbed.error(f"Pilihan: {', '.join(REPEAT_CHOICES)}"))
@@ -188,18 +190,21 @@ class Event(commands.GroupCog, name="event"):
     @event_group.command(name="roleping")
     @_manage_guild_prefix()
     async def event_roleping(self, ctx: commands.Context, event_id: int, role: discord.Role | None = None):
+        """Atur role yang di-mention saat event dimulai."""
         ok = await self.service.set_field(event_id, ctx.guild.id, "role_ping_id", str(role.id) if role else None)
         await ctx.send(embed=await self._confirm("Role ping diperbarui.") if ok else JoyEmbed.error("Event tidak ditemukan."))
 
     @event_group.command(name="reminder")
     @_manage_guild_prefix()
     async def event_reminder(self, ctx: commands.Context, event_id: int, minutes: int | None = None):
+        """Atur reminder sebelum event dimulai (dalam menit)."""
         ok = await self.service.set_field(event_id, ctx.guild.id, "reminder_minutes", minutes)
         await ctx.send(embed=await self._confirm("Reminder diperbarui.") if ok else JoyEmbed.error("Event tidak ditemukan."))
 
     @event_group.command(name="banner")
     @_manage_guild_prefix()
     async def event_banner(self, ctx: commands.Context, event_id: int, url: str):
+        """Atur banner event."""
         value = None if url.lower() == "none" else url
         ok = await self.service.set_field(event_id, ctx.guild.id, "banner_url", value)
         await ctx.send(embed=await self._confirm("Banner event diperbarui.") if ok else JoyEmbed.error("Event tidak ditemukan."))
@@ -207,6 +212,7 @@ class Event(commands.GroupCog, name="event"):
     @event_group.command(name="thumbnail")
     @_manage_guild_prefix()
     async def event_thumbnail(self, ctx: commands.Context, event_id: int, url: str):
+        """Atur thumbnail event."""
         value = None if url.lower() == "none" else url
         ok = await self.service.set_field(event_id, ctx.guild.id, "thumbnail_url", value)
         await ctx.send(embed=await self._confirm("Thumbnail event diperbarui.") if ok else JoyEmbed.error("Event tidak ditemukan."))
@@ -214,6 +220,7 @@ class Event(commands.GroupCog, name="event"):
     @event_group.command(name="color")
     @_manage_guild_prefix()
     async def event_color(self, ctx: commands.Context, event_id: int, hex_color: str):
+        """Atur warna embed event."""
         try:
             int(hex_color.lstrip("#"), 16)
         except ValueError:
@@ -225,12 +232,14 @@ class Event(commands.GroupCog, name="event"):
     @event_group.command(name="channel")
     @_manage_guild_prefix()
     async def event_channel(self, ctx: commands.Context, event_id: int, channel: discord.TextChannel):
+        """Atur channel tujuan pengumuman event."""
         ok = await self.service.set_field(event_id, ctx.guild.id, "channel_id", str(channel.id))
         await ctx.send(embed=await self._confirm(f"Channel event diset ke {channel.mention}.") if ok else JoyEmbed.error("Event tidak ditemukan."))
 
     @event_group.command(name="reschedule")
     @_manage_guild_prefix()
     async def event_reschedule(self, ctx: commands.Context, event_id: int, date: str, time: str, timezone_name: str = "WIB"):
+        """Jadwalkan ulang event ke tanggal/jam baru."""
         try:
             run_at_utc = parse_local_to_utc(date, time, timezone_name)
         except ValueError as e:
@@ -242,15 +251,18 @@ class Event(commands.GroupCog, name="event"):
     @event_group.command(name="cancel")
     @_manage_guild_prefix()
     async def event_cancel(self, ctx: commands.Context, event_id: int):
+        """Batalkan event."""
         ok = await self.service.cancel(event_id, ctx.guild.id)
         await ctx.send(embed=await self._confirm(f"Event #{event_id} dibatalkan.") if ok else JoyEmbed.error("Event tidak ditemukan."))
 
     @event_group.command(name="list")
     async def event_list(self, ctx: commands.Context):
+        """Menampilkan daftar event aktif."""
         await self._send_list(ctx)
 
     @event_group.command(name="info")
     async def event_info(self, ctx: commands.Context, event_id: int):
+        """Menampilkan detail satu event."""
         event = await self.service.get(event_id, ctx.guild.id)
         if event is None:
             await ctx.send(embed=JoyEmbed.error("Event tidak ditemukan."))
@@ -259,6 +271,7 @@ class Event(commands.GroupCog, name="event"):
 
     @event_group.command(name="countdown")
     async def event_countdown(self, ctx: commands.Context, event_id: int):
+        """Menampilkan hitung mundur event."""
         event = await self.service.get(event_id, ctx.guild.id)
         if event is None:
             await ctx.send(embed=JoyEmbed.error("Event tidak ditemukan."))
