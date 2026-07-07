@@ -263,6 +263,7 @@ class AutoMod(commands.GroupCog, name="automod"):
     @commands.group(name="automod", invoke_without_command=True)
     @commands.guild_only()
     async def automod_prefix(self, ctx: commands.Context):
+        """Menampilkan konfigurasi auto moderation saat ini."""
         config = await self.service.get_config(ctx.guild.id)
         await ctx.send(embed=self._settings_embed(config))
 
@@ -285,18 +286,21 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="toggle")
     @_manage_guild_prefix()
     async def automod_toggle(self, ctx: commands.Context, state: str):
+        """Aktifkan atau nonaktifkan auto moderation."""
         await self.service.set_config_field(ctx.guild.id, "enabled", int(state.lower() == "on"))
         await ctx.send(embed=JoyEmbed.success(f"Auto Moderation: **{state.upper()}**."))
 
     @automod_prefix.command(name="logchannel")
     @_manage_guild_prefix()
     async def automod_logchannel(self, ctx: commands.Context, channel: discord.TextChannel | None = None):
+        """Atur channel log untuk auto moderation."""
         await self.service.set_config_field(ctx.guild.id, "log_channel_id", str(channel.id) if channel else None)
         await ctx.send(embed=JoyEmbed.success(f"Log channel automod: {channel.mention if channel else 'dinonaktifkan'}."))
 
     @automod_prefix.command(name="spam")
     @_manage_guild_prefix()
     async def automod_spam(self, ctx: commands.Context, state: str, threshold: int = 5, interval: int = 5, action: str = "timeout"):
+        """Atur filter spam (banyak pesan dalam waktu singkat)."""
         if action not in VALID_ACTIONS:
             await ctx.send(embed=JoyEmbed.error(f"Aksi: {', '.join(VALID_ACTIONS)}"))
             return
@@ -309,6 +313,7 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="mentionspam")
     @_manage_guild_prefix()
     async def automod_mentionspam(self, ctx: commands.Context, state: str, threshold: int = 5, action: str = "timeout"):
+        """Atur filter mention spam / anti mass ping."""
         if action not in VALID_ACTIONS:
             await ctx.send(embed=JoyEmbed.error(f"Aksi: {', '.join(VALID_ACTIONS)}"))
             return
@@ -320,6 +325,7 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="invitefilter")
     @_manage_guild_prefix()
     async def automod_invitefilter(self, ctx: commands.Context, state: str, action: str = "delete"):
+        """Atur filter invite Discord."""
         if action not in VALID_ACTIONS:
             await ctx.send(embed=JoyEmbed.error(f"Aksi: {', '.join(VALID_ACTIONS)}"))
             return
@@ -330,6 +336,7 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="linkfilter")
     @_manage_guild_prefix()
     async def automod_linkfilter(self, ctx: commands.Context, state: str, action: str = "delete"):
+        """Atur filter link."""
         if action not in VALID_ACTIONS:
             await ctx.send(embed=JoyEmbed.error(f"Aksi: {', '.join(VALID_ACTIONS)}"))
             return
@@ -340,6 +347,7 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="capsfilter")
     @_manage_guild_prefix()
     async def automod_capsfilter(self, ctx: commands.Context, state: str, threshold_percent: int = 70, min_length: int = 10, action: str = "delete"):
+        """Atur filter huruf kapital berlebihan."""
         if action not in VALID_ACTIONS:
             await ctx.send(embed=JoyEmbed.error(f"Aksi: {', '.join(VALID_ACTIONS)}"))
             return
@@ -352,6 +360,7 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="badword")
     @_manage_guild_prefix()
     async def automod_badword(self, ctx: commands.Context, state: str, action: str = "delete"):
+        """Atur filter kata terlarang."""
         if action not in VALID_ACTIONS:
             await ctx.send(embed=JoyEmbed.error(f"Aksi: {', '.join(VALID_ACTIONS)}"))
             return
@@ -362,17 +371,20 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="addbadword")
     @_manage_guild_prefix()
     async def automod_addbadword(self, ctx: commands.Context, *, word: str):
+        """Tambahkan kata ke daftar kata terlarang."""
         await self.service.add_badword(ctx.guild.id, word)
         await ctx.send(embed=JoyEmbed.success(f"Kata `{word}` ditambahkan ke bad word list."))
 
     @automod_prefix.command(name="removebadword")
     @_manage_guild_prefix()
     async def automod_removebadword(self, ctx: commands.Context, *, word: str):
+        """Hapus kata dari daftar kata terlarang."""
         await self.service.remove_badword(ctx.guild.id, word)
         await ctx.send(embed=JoyEmbed.success(f"Kata `{word}` dihapus dari bad word list."))
 
     @automod_prefix.command(name="badwordlist")
     async def automod_badwordlist(self, ctx: commands.Context):
+        """Menampilkan daftar kata terlarang."""
         words = await self.service.get_badwords(ctx.guild.id)
         text = ", ".join(f"`{w}`" for w in words) if words else "Belum ada kata terlarang."
         await ctx.send(embed=JoyEmbed.info(text, title=f"{emoji.settings} Bad Word List"))
@@ -380,6 +392,7 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="scamdetection")
     @_manage_guild_prefix()
     async def automod_scamdetection(self, ctx: commands.Context, state: str, action: str = "ban"):
+        """Atur deteksi scam otomatis."""
         if action not in VALID_ACTIONS:
             await ctx.send(embed=JoyEmbed.error(f"Aksi: {', '.join(VALID_ACTIONS)}"))
             return
@@ -390,12 +403,14 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="ghostping")
     @_manage_guild_prefix()
     async def automod_ghostping(self, ctx: commands.Context, state: str):
+        """Aktifkan atau nonaktifkan deteksi ghost ping."""
         await self.service.set_config_field(ctx.guild.id, "ghost_ping_enabled", int(state.lower() == "on"))
         await ctx.send(embed=JoyEmbed.success(f"Anti Ghost Ping: **{state.upper()}**."))
 
     @automod_prefix.command(name="antiraid")
     @_manage_guild_prefix()
     async def automod_antiraid(self, ctx: commands.Context, state: str, threshold: int = 10, interval: int = 10, action: str = "kick"):
+        """Atur anti raid / anti join flood."""
         if action not in ("kick", "ban"):
             await ctx.send(embed=JoyEmbed.error("Aksi: kick atau ban"))
             return
@@ -408,6 +423,7 @@ class AutoMod(commands.GroupCog, name="automod"):
     @automod_prefix.command(name="whitelist")
     @_manage_guild_prefix()
     async def automod_whitelist(self, ctx: commands.Context, action: str, target_type: str, target: discord.Member | discord.Role | discord.TextChannel):
+        """Kelola whitelist automod (user/role/channel dikecualikan)."""
         target_type = target_type.lower()
         if target_type not in ("user", "role", "channel"):
             await ctx.send(embed=JoyEmbed.error("Tipe: user, role, atau channel"))
@@ -423,6 +439,7 @@ class AutoMod(commands.GroupCog, name="automod"):
 
     @automod_prefix.command(name="settings")
     async def automod_settings(self, ctx: commands.Context):
+        """Menampilkan konfigurasi auto moderation saat ini."""
         config = await self.service.get_config(ctx.guild.id)
         await ctx.send(embed=self._settings_embed(config))
 
